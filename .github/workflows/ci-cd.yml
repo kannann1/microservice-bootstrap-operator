@@ -86,7 +86,7 @@ jobs:
           mvn -B org.owasp:dependency-check-maven:check
           
       - name: Upload OWASP report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
           path: Java/target/dependency-check-report.html

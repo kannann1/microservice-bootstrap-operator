@@ -1,8 +1,12 @@
 name: CI/CD Pipeline
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Publish Documentation"]
+    types:
+      - completed
     branches: [ main ]
+  push:
     tags:
       - 'v*'
   pull_request:
@@ -18,10 +22,6 @@ on:
           - dev
           - staging
           - prod
-  workflow_run:
-    workflows: ["Publish Documentation"]
-    types:
-      - completed
 
 env:
   REGISTRY: docker.io

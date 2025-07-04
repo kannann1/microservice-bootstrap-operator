@@ -1,0 +1,50 @@
+apiVersion: microservice.github.io/v1
+kind: AppConfig
+metadata:
+  name: sample-app
+  namespace: default
+spec:
+  appName: sample-app
+  githubRepo: https://github.com/example/sample-app-config
+  githubRef: main
+  configPath: /config
+  sidecarInjection:
+    enabled: true
+    name: logging-sidecar
+    image: fluent/fluent-bit:latest
+    selectorLabels:
+      app: sample-app
+      component: web
+    env:
+      LOG_LEVEL: info
+      FLUSH_INTERVAL: "5"
+    volumes:
+      - config-volume
+    volumeMounts:
+      config-volume: /fluent-bit/etc
+  secretRotation:
+    enabled: true
+    interval: 24h
+    secretNames:
+      - sample-app-db-credentials
+      - sample-app-api-keys
+  rbac:
+    enabled: true
+    serviceAccountName: sample-app-sa
+    rules:
+      - apiGroups: [""]
+        resources: ["configmaps", "secrets"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["apps"]
+        resources: ["deployments"]
+        verbs: ["get", "list", "watch"]
+  networkPolicy:
+    enabled: true
+    ingressRules:
+      - from:
+          - podSelector:
+              matchLabels:
+                app: frontend
+        ports:
+          - port: 8080
+            protocol: TCP

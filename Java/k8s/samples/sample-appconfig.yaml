@@ -1,0 +1,43 @@
+apiVersion: microservice.example.com/v1
+kind: AppConfig
+metadata:
+  name: sample-app
+  namespace: default
+spec:
+  appName: sample-microservice
+  githubRepo: https://github.com/example/sample-config
+  githubRef: main
+  configPath: /configs
+  sidecars:
+    - name: vault-agent
+      image: vault:1.9.0
+      type: vault-agent
+      config:
+        role: "app-role"
+        path: "secret/data/sample-app"
+    - name: istio-proxy
+      image: istio/proxyv2:1.12.0
+      type: istio
+      config:
+        injectMode: "auto"
+  secretRotation:
+    enabled: true
+    intervalHours: 24
+    sources:
+      - vault
+      - aws-secrets-manager
+  rbac:
+    serviceAccountName: sample-app-sa
+    roles:
+      - configReader
+      - secretReader
+    roleBindings:
+      - configReaderBinding
+      - secretReaderBinding
+  networkPolicy:
+    enabled: true
+    ingress:
+      - "allow-from-same-namespace"
+    egress:
+      - "allow-dns"
+      - "allow-api-server"

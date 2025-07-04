@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: microservice-bootstrap-operator-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: microservice-bootstrap-operator
+  namespace: microservice-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: microservice-operator-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  - serviceaccounts
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - microservice.example.com
+  resources:
+  - appconfigs
+  - appconfigs/status
+  - appconfigs/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: microservice-operator-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: microservice-operator-role
+subjects:
+- kind: ServiceAccount
+  name: microservice-bootstrap-operator
+  namespace: microservice-bootstrap-operator-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-bootstrap-operator
+  namespace: microservice-bootstrap-operator-system
+  labels:
+    app: microservice-bootstrap-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-bootstrap-operator
+  template:
+    metadata:
+      labels:
+        app: microservice-bootstrap-operator
+    spec:
+      serviceAccountName: microservice-bootstrap-operator
+      containers:
+      - name: operator
+        image: ${OPERATOR_IMAGE:microservice-bootstrap-operator-java:latest}
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: JAVA_TOOL_OPTIONS
+          value: "-XX:MaxRAMPercentage=75.0"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10

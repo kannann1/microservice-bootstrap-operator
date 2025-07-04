@@ -1,0 +1,73 @@
+{{- if .Values.serviceAccount.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "microservice-bootstrap-operator.fullname" . }}-manager-role
+  labels:
+    {{- include "microservice-bootstrap-operator.labels" . | nindent 4 }}
+rules:
+  # Framework: Allow access to namespaces for watching resources
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch"]
+  
+  # AppConfig resources
+  - apiGroups: ["microservice.github.io"]
+    resources: ["appconfigs"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["microservice.github.io"]
+    resources: ["appconfigs/status"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["microservice.github.io"]
+    resources: ["appconfigs/finalizers"]
+    verbs: ["update"]
+  
+  # Pod resources for sidecar injection
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  
+  # ConfigMap resources
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  
+  # Secret resources for rotation
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  
+  # RBAC resources
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  
+  # Network policies
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  
+  # Events
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "microservice-bootstrap-operator.fullname" . }}-manager-rolebinding
+  labels:
+    {{- include "microservice-bootstrap-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "microservice-bootstrap-operator.fullname" . }}-manager-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "microservice-bootstrap-operator.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

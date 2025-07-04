@@ -1,0 +1,57 @@
+# Docker Hub Configuration for Microservice Bootstrap Operator
+
+# Repository Configuration
+repository:
+  name: k8soperators/microservice-bootstrap-operator
+  description: A Kubernetes operator for automating microservice bootstrapping and secret rotation
+  full_description: |
+    # Microservice Bootstrap Operator
+    
+    A Kubernetes operator for automating microservice bootstrapping and secret rotation.
+    
+    ## Features
+    
+    - Secret rotation with multiple strategies (default, database, api-key, tls)
+    - Sidecar injection based on label selectors
+    - ConfigMap management
+    - RBAC configuration
+    - Network policy management
+    
+    ## Usage
+    
+    See the [GitHub repository](https://github.com/k8soperators/microservice-bootstrap-operator) for full documentation.
+  
+  # Tags for the Docker image
+  tags:
+    - kubernetes
+    - operator
+    - microservice
+    - java
+    - secret-rotation
+    - sidecar-injection
+    - kubernetes-operator
+
+# Build Settings
+build:
+  # Base image for the operator
+  base_image: eclipse-temurin:17-jre-alpine
+  
+  # Build arguments
+  build_args:
+    JAVA_OPTS: "-Xmx512m -Xms256m"
+    APP_VERSION: "${VERSION}"
+  
+  # Labels for the Docker image
+  labels:
+    maintainer: "K8s Operators Team <maintainers@k8soperators.github.io>"
+    org.opencontainers.image.source: "https://github.com/k8soperators/microservice-bootstrap-operator"
+    org.opencontainers.image.description: "Kubernetes operator for microservice bootstrapping"
+    org.opencontainers.image.licenses: "Apache-2.0"
+
+# Security Settings
+security:
+  # Enable vulnerability scanning
+  scan_on_push: true
+  
+  # Automatically build when new base image is available
+  auto_build_on_base_image_update: true

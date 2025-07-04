@@ -1,0 +1,74 @@
+# Helm Repository Configuration for Microservice Bootstrap Operator
+
+# Repository Configuration
+repository:
+  name: k8soperators/charts
+  description: Helm charts for Kubernetes operators
+  homepage: https://k8soperators.github.io/charts
+  
+  # GitHub Pages settings
+  pages:
+    branch: gh-pages
+    path: /
+    
+  # Chart Museum settings (optional)
+  chartmuseum:
+    enabled: false
+    url: https://charts.k8soperators.io
+    username: ${CHARTMUSEUM_USERNAME}
+    password: ${CHARTMUSEUM_PASSWORD}
+
+# Chart Configuration
+chart:
+  name: microservice-bootstrap-operator
+  version: 0.1.0
+  description: A Helm chart for the Microservice Bootstrap Kubernetes Operator
+  
+  # Maintainers
+  maintainers:
+    - name: K8s Operators Team
+      email: maintainers@k8soperators.github.io
+      url: https://github.com/k8soperators
+      
+  # Keywords
+  keywords:
+    - kubernetes
+    - operator
+    - microservice
+    - bootstrap
+    - secret-rotation
+    - sidecar-injection
+    
+  # Sources
+  sources:
+    - https://github.com/k8soperators/microservice-bootstrap-operator
+    
+  # Home URL
+  home: https://github.com/k8soperators/microservice-bootstrap-operator
+  
+  # Icon URL (optional)
+  icon: https://k8soperators.github.io/charts/icons/microservice-bootstrap-operator.png
+
+# Release Process
+release:
+  # Automatic release on tag
+  on_tag: true
+  
+  # Tag pattern
+  tag_pattern: v*
+  
+  # Release notes generation
+  generate_release_notes: true
+  
+  # Chart testing
+  test:
+    enabled: true
+    image: quay.io/helmpack/chart-testing:v3.7.1
+    
+  # Chart validation
+  validate:
+    enabled: true
+    tools:
+      - helm-lint
+      - kubeval
+      - yamllint

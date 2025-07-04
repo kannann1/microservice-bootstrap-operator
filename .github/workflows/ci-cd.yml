@@ -1,0 +1,383 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+  workflow_run:
+    workflows: ["Publish Documentation"]
+    types:
+      - completed
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: k8soperators/microservice-bootstrap-operator
+  JAVA_VERSION: '17'
+  HELM_CHART_NAME: microservice-bootstrap-operator
+  HELM_CHART_VERSION: "0.1.0"
+  HELM_REPO_URL: https://k8soperators.github.io/charts
+  SONAR_PROJECT_KEY: k8soperators_microservice-bootstrap-operator
+  SONAR_ORGANIZATION: k8soperators
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of SonarQube analysis
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+          
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Build with Maven
+        run: |
+          cd Java
+          mvn -B clean package
+          
+      - name: Run tests with coverage
+        run: |
+          cd Java
+          mvn -B test jacoco:report
+          
+      - name: SonarQube Scan
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd Java
+          mvn -B sonar:sonar \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io
+          
+      - name: Run OWASP Dependency Check
+        run: |
+          cd Java
+          mvn -B org.owasp:dependency-check-maven:check
+          
+      - name: Upload OWASP report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: Java/target/dependency-check-report.html
+          retention-days: 7
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-jar
+          path: Java/target/*.jar
+          retention-days: 1
+          
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: Java/target/surefire-reports
+          retention-days: 7
+
+  docker-build:
+    name: Build and Push Docker Image
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: app-jar
+          path: Java/target
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=sha,format=short
+            
+      - name: Build Docker image for scanning
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Java
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:scan
+          labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:scan
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Java
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          
+      - name: Verify image signature
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(echo ${{ steps.meta.outputs.tags }} | cut -d':' -f2 | head -n1)
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(echo ${{ steps.meta.outputs.tags }} | cut -d':' -f2 | head -n1)
+
+  helm-package:
+    name: Package and Push Helm Chart
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+        
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.10.0'
+          
+      - name: Extract version
+        id: extract_version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "CHART_VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            SHA=$(git rev-parse --short HEAD)
+            echo "VERSION=latest" >> $GITHUB_ENV
+            echo "CHART_VERSION=${{ env.HELM_CHART_VERSION }}-dev.$SHA" >> $GITHUB_ENV
+          fi
+          
+      - name: Update Helm chart version and app version
+        run: |
+          sed -i "s/version: .*/version: ${{ env.CHART_VERSION }}/g" helm/${{ env.HELM_CHART_NAME }}/Chart.yaml
+          sed -i "s/appVersion: .*/appVersion: \"${{ env.VERSION }}\"/g" helm/${{ env.HELM_CHART_NAME }}/Chart.yaml
+          
+      - name: Lint Helm chart
+        run: |
+          helm lint helm/${{ env.HELM_CHART_NAME }}
+          
+      - name: Package Helm chart
+        run: |
+          mkdir -p .cr-release-packages
+          helm package helm/${{ env.HELM_CHART_NAME }} --destination .cr-release-packages
+          
+      - name: Upload Helm chart artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: helm-chart
+          path: .cr-release-packages/*.tgz
+          retention-days: 5
+          
+      - name: Install chart-releaser
+        run: |
+          wget https://github.com/helm/chart-releaser/releases/download/v1.5.0/chart-releaser_1.5.0_linux_amd64.tar.gz
+          tar -xzvf chart-releaser_1.5.0_linux_amd64.tar.gz
+          rm chart-releaser_1.5.0_linux_amd64.tar.gz
+          
+      - name: Configure Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          
+      - name: Push Helm chart to GitHub Pages
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_OWNER: k8soperators
+          CR_GIT_REPO: charts
+          CR_PACKAGE_PATH: .cr-release-packages
+          CR_INDEX_PATH: .cr-index
+        run: |
+          ./cr upload
+          ./cr index
+          git checkout gh-pages
+          cp -f .cr-index/index.yaml index.yaml
+          git add index.yaml
+          git commit -m "Update Helm chart index for ${{ env.HELM_CHART_NAME }} ${{ env.CHART_VERSION }}"
+          git push
+          
+      - name: Validate Helm chart with kubeval
+        run: |
+          helm template helm/${{ env.HELM_CHART_NAME }} | kubeval --strict
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: helm-package
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.10.0'
+        
+      - name: Configure Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          
+      - name: Extract version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=latest
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: Add Helm repo
+        run: |
+          helm repo add k8soperators ${{ env.HELM_REPO_URL }}
+          helm repo update
+          
+      - name: Deploy using Helm
+        run: |
+          NAMESPACE=microservice-bootstrap-operator-${{ github.event.inputs.environment || 'prod' }}
+          
+          helm upgrade --install microservice-bootstrap-operator k8soperators/${{ env.HELM_CHART_NAME }} \
+            --namespace $NAMESPACE \
+            --create-namespace \
+            --set image.tag=${{ env.VERSION }} \
+            --set environment=${{ github.event.inputs.environment || 'prod' }} \
+            --wait --timeout 120s
+          
+      - name: Verify deployment
+        run: |
+          NAMESPACE=microservice-bootstrap-operator-${{ github.event.inputs.environment || 'prod' }}
+          kubectl rollout status deployment/microservice-bootstrap-operator -n $NAMESPACE --timeout=120s
+          
+      - name: Run smoke tests
+        run: |
+          NAMESPACE=microservice-bootstrap-operator-${{ github.event.inputs.environment || 'prod' }}
+          kubectl get appconfigs -n $NAMESPACE
+          
+      - name: Send Slack notification
+        if: success() && secrets.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: 'Deployment to ${{ github.event.inputs.environment || "prod" }} successful'
+          SLACK_MESSAGE: 'Successfully deployed version ${{ env.VERSION }} to ${{ github.event.inputs.environment || "prod" }} environment'
+          
+  release:
+    name: Create GitHub Release
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+          
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "RELEASE_NOTES=Initial release" >> $GITHUB_OUTPUT
+          else
+            echo "RELEASE_NOTES=$(git log --pretty=format:'- %s' $PREVIOUS_TAG..HEAD | grep -v 'Merge pull request')" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/helm-chart/*.tgz
+            artifacts/app-jar/*.jar
+          body: |
+            ## Release Notes
+            ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+            
+            ## Installation
+            ```bash
+            # Add the Helm repository
+            helm repo add k8soperators ${{ env.HELM_REPO_URL }}
+            helm repo update
+            
+            # Install the operator
+            helm install microservice-bootstrap-operator k8soperators/${{ env.HELM_CHART_NAME }} --namespace microservice-bootstrap-operator-system --create-namespace
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

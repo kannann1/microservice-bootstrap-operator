@@ -1,0 +1,122 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:  # Allow manual triggering
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          
+      - name: Install mkdocs
+        run: pip install mkdocs mkdocs-material
+        
+      - name: Create mkdocs.yml
+        run: |
+          cat > mkdocs.yml << EOF
+          site_name: Microservice Bootstrap Operator
+          site_url: https://k8soperators.github.io/microservice-bootstrap-operator
+          repo_url: https://github.com/k8soperators/microservice-bootstrap-operator
+          theme:
+            name: material
+            palette:
+              primary: indigo
+              accent: indigo
+            features:
+              - navigation.tabs
+              - navigation.sections
+              - toc.integrate
+          markdown_extensions:
+            - pymdownx.highlight
+            - pymdownx.superfences
+            - pymdownx.inlinehilite
+            - pymdownx.tabbed
+            - pymdownx.critic
+          nav:
+            - Home: index.md
+            - CI/CD Pipeline: CICD.md
+            - Setup Guide: SETUP.md
+            - Java Documentation: Java/README.md
+            - Helm Charts: helm/README.md
+          EOF
+          
+      - name: Create docs structure
+        run: |
+          mkdir -p docs
+          
+          # Copy README.md to index.md
+          if [ -f "README.md" ]; then
+            cp README.md docs/index.md
+          else
+            echo "# Microservice Bootstrap Operator" > docs/index.md
+            echo "\nA Kubernetes operator for bootstrapping microservices with common configurations and features." >> docs/index.md
+          fi
+          
+          # Copy other MD files to docs directory
+          if [ -f "CICD.md" ]; then cp CICD.md docs/; fi
+          if [ -f "SETUP.md" ]; then cp SETUP.md docs/; fi
+          
+          # Create directories and copy nested MD files
+          if [ -d "Java" ]; then
+            mkdir -p docs/Java
+            find Java -name "*.md" -exec cp {} docs/Java/ \;
+          fi
+          
+          if [ -d "helm" ]; then
+            mkdir -p docs/helm
+            find helm -name "*.md" -exec cp {} docs/helm/ \;
+          fi
+          
+          # If no helm README exists, create one
+          if [ ! -f "docs/helm/README.md" ]; then
+            mkdir -p docs/helm
+            echo "# Helm Charts" > docs/helm/README.md
+            echo "\nHelm charts for the Microservice Bootstrap Operator." >> docs/helm/README.md
+          fi
+          
+      - name: Build documentation
+        run: mkdocs build
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './site'
+          
+  deploy-docs:
+    name: Deploy Documentation
+    needs: build-docs
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

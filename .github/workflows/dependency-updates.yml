@@ -1,0 +1,89 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Run weekly on Monday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  maven-dependency-updates:
+    name: Maven Dependency Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          
+      - name: Check for dependency updates
+        run: |
+          cd Java
+          mvn versions:display-dependency-updates
+          mvn versions:display-plugin-updates
+          
+      - name: Create dependency update PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update dependencies"
+          title: "chore: update dependencies"
+          body: |
+            This PR updates project dependencies to their latest versions.
+            
+            This is an automated PR created by the dependency-updates workflow.
+          branch: dependency-updates
+          base: main
+          labels: dependencies
+          
+  docker-base-image-updates:
+    name: Docker Base Image Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Check for base image updates
+        id: check
+        run: |
+          BASE_IMAGE=$(grep "FROM eclipse-temurin:" Java/Dockerfile | head -1 | cut -d' ' -f2)
+          echo "Current base image: $BASE_IMAGE"
+          
+          # Check if there's a newer version available
+          LATEST_TAG=$(curl -s https://hub.docker.com/v2/repositories/eclipse-temurin/tags | jq -r '.results[] | select(.name | contains("17-jre-alpine")) | .name' | sort -V | tail -1)
+          echo "Latest available tag: $LATEST_TAG"
+          
+          if [[ "$BASE_IMAGE" != "eclipse-temurin:$LATEST_TAG" ]]; then
+            echo "Update available: $LATEST_TAG"
+            echo "update_available=true" >> $GITHUB_OUTPUT
+            echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "No updates available"
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Update Dockerfile
+        if: steps.check.outputs.update_available == 'true'
+        run: |
+          sed -i "s|FROM eclipse-temurin:[^ ]*|FROM eclipse-temurin:${{ steps.check.outputs.latest_tag }}|" Java/Dockerfile
+          
+      - name: Create Docker update PR
+        if: steps.check.outputs.update_available == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update Docker base image to ${{ steps.check.outputs.latest_tag }}"
+          title: "chore: update Docker base image"
+          body: |
+            This PR updates the Docker base image to `eclipse-temurin:${{ steps.check.outputs.latest_tag }}`.
+            
+            This is an automated PR created by the dependency-updates workflow.
+          branch: docker-base-image-update
+          base: main
+          labels: dependencies,docker

@@ -1,0 +1,80 @@
+# Default values for microservice-bootstrap-operator
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: k8soperators/microservice-bootstrap-operator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Operator specific configuration
+operator:
+  # Log level for the operator
+  logLevel: info
+  # Namespace to watch for AppConfig resources, leave empty to watch all namespaces
+  watchNamespace: ""
+  # Leader election configuration for HA deployments
+  leaderElection:
+    enabled: false
+    leaseDuration: 15
+    renewDeadline: 10
+    retryPeriod: 2
+  
+  # Metrics configuration
+  metrics:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8080
+    serviceMonitor:
+      enabled: false
+      additionalLabels: {}
+
+# CRD configuration
+crds:
+  # If true, the CRD will be created/updated
+  create: true
+  # If true, the CRD will be kept when the chart is uninstalled
+  keep: true

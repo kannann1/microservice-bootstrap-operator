@@ -1,0 +1,159 @@
+{{- if .Values.crds.create }}
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: appconfigs.microservice.github.io
+  labels:
+    {{- include "microservice-bootstrap-operator.labels" . | nindent 4 }}
+  {{- if .Values.crds.keep }}
+  annotations:
+    "helm.sh/resource-policy": keep
+  {{- end }}
+spec:
+  group: microservice.github.io
+  names:
+    kind: AppConfig
+    listKind: AppConfigList
+    plural: appconfigs
+    singular: appconfig
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                appName:
+                  type: string
+                  description: "Name of the application"
+                githubRepo:
+                  type: string
+                  description: "GitHub repository URL for config synchronization"
+                sidecarInjection:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Whether sidecar injection is enabled"
+                    name:
+                      type: string
+                      description: "Name of the sidecar container"
+                    image:
+                      type: string
+                      description: "Container image for the sidecar"
+                    selectorLabels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: "Labels to select pods for injection"
+                    env:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: "Environment variables for the sidecar container"
+                    volumeMounts:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: "Volume mounts for the sidecar container"
+                    volumes:
+                      type: array
+                      items:
+                        type: object
+                      description: "Volume definitions to add to the pod"
+                rbac:
+                  type: object
+                  properties:
+                    serviceAccountName:
+                      type: string
+                      description: "Name of the ServiceAccount to create"
+                    roles:
+                      type: array
+                      items:
+                        type: string
+                      description: "List of Role names to create"
+                    roleBindings:
+                      type: array
+                      items:
+                        type: string
+                      description: "List of RoleBinding names to create"
+                networkPolicy:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Whether network policy is enabled"
+                    ingressRules:
+                      type: array
+                      items:
+                        type: object
+                      description: "List of ingress rules"
+                    egressRules:
+                      type: array
+                      items:
+                        type: object
+                      description: "List of egress rules"
+                secretRotation:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Whether secret rotation is enabled"
+                    schedule:
+                      type: string
+                      description: "Cron schedule for rotation"
+                    secretNames:
+                      type: array
+                      items:
+                        type: string
+                      description: "List of secret names to rotate"
+              required:
+                - appName
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                lastSyncTime:
+                  type: string
+                createdResources:
+                  type: array
+                  items:
+                    type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: App
+          type: string
+          jsonPath: .spec.appName
+        - name: Sidecar Injection
+          type: boolean
+          jsonPath: .spec.sidecarInjection.enabled
+        - name: Network Policy
+          type: boolean
+          jsonPath: .spec.networkPolicy.enabled
+        - name: Secret Rotation
+          type: boolean
+          jsonPath: .spec.secretRotation.enabled
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+{{- end }}

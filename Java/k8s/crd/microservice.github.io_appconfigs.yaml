@@ -1,0 +1,158 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: appconfigs.microservice.github.io
+spec:
+  group: microservice.github.io
+  names:
+    kind: AppConfig
+    listKind: AppConfigList
+    plural: appconfigs
+    singular: appconfig
+    shortNames:
+      - appconf
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - appName
+                - githubRepo
+              properties:
+                appName:
+                  type: string
+                  description: "Application name"
+                githubRepo:
+                  type: string
+                  description: "GitHub repository URL containing configuration templates"
+                githubRef:
+                  type: string
+                  description: "Branch or tag to use from the GitHub repository"
+                configPath:
+                  type: string
+                  description: "Path within the repository where config templates are stored"
+                sidecars:
+                  type: array
+                  description: "List of sidecars to inject"
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - image
+                      - type
+                    properties:
+                      name:
+                        type: string
+                        description: "Name of the sidecar"
+                      image:
+                        type: string
+                        description: "Image to use for the sidecar"
+                      type:
+                        type: string
+                        description: "Type of sidecar (e.g., 'istio', 'vault-agent')"
+                      config:
+                        type: object
+                        additionalProperties:
+                          type: string
+                        description: "Additional configuration for the sidecar"
+                secretRotation:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Enable secret rotation"
+                    intervalHours:
+                      type: integer
+                      description: "Rotation interval in hours"
+                    sources:
+                      type: array
+                      items:
+                        type: string
+                      description: "Secret sources to rotate"
+                rbac:
+                  type: object
+                  required:
+                    - serviceAccountName
+                  properties:
+                    serviceAccountName:
+                      type: string
+                      description: "ServiceAccount name to create"
+                    roles:
+                      type: array
+                      items:
+                        type: string
+                      description: "List of roles to create"
+                    roleBindings:
+                      type: array
+                      items:
+                        type: string
+                      description: "List of role bindings to create"
+                networkPolicy:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Enable network policy"
+                    ingress:
+                      type: array
+                      items:
+                        type: string
+                      description: "Ingress rules"
+                    egress:
+                      type: array
+                      items:
+                        type: string
+                      description: "Egress rules"
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      observedGeneration:
+                        type: integer
+                        format: int64
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                lastSyncTime:
+                  type: string
+                  format: date-time
+                  description: "Last time the configuration was synchronized"
+                lastSecretRotationTime:
+                  type: string
+                  format: date-time
+                  description: "Last time secrets were rotated"
+                createdResources:
+                  type: array
+                  items:
+                    type: string
+                  description: "List of resources created by this AppConfig"
+      subresources:
+        status: {}

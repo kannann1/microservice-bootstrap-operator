@@ -1,0 +1,17 @@
+{{- if .Values.operator.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "microservice-bootstrap-operator.fullname" . }}-metrics
+  labels:
+    {{- include "microservice-bootstrap-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.operator.metrics.service.type }}
+  ports:
+    - port: {{ .Values.operator.metrics.service.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "microservice-bootstrap-operator.selectorLabels" . | nindent 4 }}
+{{- end }}

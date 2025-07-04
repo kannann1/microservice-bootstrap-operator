@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=build --chown=operator:operator /app/target/microservice-bootstrap-operator-1.0-SNAPSHOT.jar ./microservice-bootstrap-operator.jar
 
 # Set metadata
-LABEL org.opencontainers.image.source="https://github.com/k8soperators/microservice-bootstrap-operator"
+LABEL org.opencontainers.image.source="https://github.com/kannann1/microservice-bootstrap-operator"
 LABEL org.opencontainers.image.description="Kubernetes operator for microservice bootstrapping"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 

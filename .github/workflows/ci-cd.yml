@@ -25,13 +25,13 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: k8soperators/microservice-bootstrap-operator
+  IMAGE_NAME: kannann1/microservice-bootstrap-operator
   JAVA_VERSION: '17'
   HELM_CHART_NAME: microservice-bootstrap-operator
   HELM_CHART_VERSION: "0.1.0"
-  HELM_REPO_URL: https://k8soperators.github.io/charts
-  SONAR_PROJECT_KEY: k8soperators_microservice-bootstrap-operator
-  SONAR_ORGANIZATION: k8soperators
+  HELM_REPO_URL: https://kannann1.github.io/charts
+  SONAR_PROJECT_KEY: kannann1_microservice-bootstrap-operator
+  SONAR_ORGANIZATION: kannann1
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for better relevancy of SonarQube analysis
         
@@ -248,7 +248,7 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CR_OWNER: k8soperators
+          CR_OWNER: kannann1
           CR_GIT_REPO: charts
           CR_PACKAGE_PATH: .cr-release-packages
           CR_INDEX_PATH: .cr-index
@@ -298,14 +298,14 @@ jobs:
           
       - name: Add Helm repo
         run: |
-          helm repo add k8soperators ${{ env.HELM_REPO_URL }}
+          helm repo add kannann1 ${{ env.HELM_REPO_URL }}
           helm repo update
           
       - name: Deploy using Helm
         run: |
           NAMESPACE=microservice-bootstrap-operator-${{ github.event.inputs.environment || 'prod' }}
           
-          helm upgrade --install microservice-bootstrap-operator k8soperators/${{ env.HELM_CHART_NAME }} \
+          helm upgrade --install microservice-bootstrap-operator kannann1/${{ env.HELM_CHART_NAME }} \
             --namespace $NAMESPACE \
             --create-namespace \
             --set image.tag=${{ env.VERSION }} \
@@ -372,11 +372,11 @@ jobs:
             ## Installation
             ```bash
             # Add the Helm repository
-            helm repo add k8soperators ${{ env.HELM_REPO_URL }}
+            helm repo add kannann1 ${{ env.HELM_REPO_URL }}
             helm repo update
             
             # Install the operator
-            helm install microservice-bootstrap-operator k8soperators/${{ env.HELM_CHART_NAME }} --namespace microservice-bootstrap-operator-system --create-namespace
+            helm install microservice-bootstrap-operator kannann1/${{ env.HELM_CHART_NAME }} --namespace microservice-bootstrap-operator-system --create-namespace
             ```
           draft: false
           prerelease: false

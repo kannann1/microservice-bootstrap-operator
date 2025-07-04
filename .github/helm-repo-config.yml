@@ -2,9 +2,9 @@
 
 # Repository Configuration
 repository:
-  name: k8soperators/charts
+  name: kannann1/charts
   description: Helm charts for Kubernetes operators
-  homepage: https://k8soperators.github.io/charts
+  homepage: https://kannann1.github.io/charts
   
   # GitHub Pages settings
   pages:
@@ -14,7 +14,7 @@ repository:
   # Chart Museum settings (optional)
   chartmuseum:
     enabled: false
-    url: https://charts.k8soperators.io
+    url: https://charts.kannann1.io
     username: ${CHARTMUSEUM_USERNAME}
     password: ${CHARTMUSEUM_PASSWORD}
 
@@ -27,8 +27,8 @@ chart:
   # Maintainers
   maintainers:
     - name: K8s Operators Team
-      email: maintainers@k8soperators.github.io
-      url: https://github.com/k8soperators
+      email: maintainers@kannann1.github.io
+      url: https://github.com/kannann1
       
   # Keywords
   keywords:
@@ -41,13 +41,13 @@ chart:
     
   # Sources
   sources:
-    - https://github.com/k8soperators/microservice-bootstrap-operator
+    - https://github.com/kannann1/microservice-bootstrap-operator
     
   # Home URL
-  home: https://github.com/k8soperators/microservice-bootstrap-operator
+  home: https://github.com/kannann1/microservice-bootstrap-operator
   
   # Icon URL (optional)
-  icon: https://k8soperators.github.io/charts/icons/microservice-bootstrap-operator.png
+  icon: https://kannann1.github.io/charts/icons/microservice-bootstrap-operator.png
 
 # Release Process
 release:

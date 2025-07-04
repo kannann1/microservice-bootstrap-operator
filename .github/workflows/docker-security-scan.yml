@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: k8soperators/microservice-bootstrap-operator
+  IMAGE_NAME: kannann1/microservice-bootstrap-operator
 
 jobs:
   scan:

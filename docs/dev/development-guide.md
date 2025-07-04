@@ -16,7 +16,7 @@ This guide provides instructions for setting up a development environment and co
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/k8soperators/microservice-bootstrap-operator.git
+git clone https://github.com/kannann1/microservice-bootstrap-operator.git
 cd microservice-bootstrap-operator
 ```
 
@@ -44,7 +44,7 @@ Java/
 │   │   ├── java/
 │   │   │   └── io/
 │   │   │       └── github/
-│   │   │           └── k8soperators/
+│   │   │           └── kannann1/
 │   │   │               └── microservicebootstrapoperator/
 │   │   │                   ├── config/           # Spring Boot configuration
 │   │   │                   ├── controller/       # Kubernetes controllers
@@ -57,7 +57,7 @@ Java/
 │       └── java/
 │           └── io/
 │               └── github/
-│                   └── k8soperators/
+│                   └── kannann1/
 │                       └── microservicebootstrapoperator/
 │                           ├── controller/       # Controller tests
 │                           └── service/          # Service tests
@@ -143,7 +143,7 @@ The operator uses SLF4J with Logback for logging. You can configure the log leve
 To increase the log level for development:
 
 ```xml
-<logger name="io.github.k8soperators.microservicebootstrapoperator" level="DEBUG" />
+<logger name="io.github.kannann1.microservicebootstrapoperator" level="DEBUG" />
 ```
 
 ### Viewing Operator Logs

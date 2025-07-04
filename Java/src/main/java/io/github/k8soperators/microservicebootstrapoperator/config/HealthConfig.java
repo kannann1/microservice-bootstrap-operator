@@ -1,4 +1,4 @@
-package io.github.k8soperators.microservicebootstrapoperator.config;
+package io.github.kannann1.microservicebootstrapoperator.config;
 
 import io.javaoperatorsdk.operator.Operator;
 import org.springframework.boot.actuate.health.Health;

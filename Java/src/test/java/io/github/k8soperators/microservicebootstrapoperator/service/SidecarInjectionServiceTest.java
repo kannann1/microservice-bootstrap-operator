@@ -1,8 +1,8 @@
-package io.github.k8soperators.microservicebootstrapoperator.service;
+package io.github.kannann1.microservicebootstrapoperator.service;
 
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfigSpec;
-import io.github.k8soperators.microservicebootstrapoperator.model.SidecarInjectionConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfigSpec;
+import io.github.kannann1.microservicebootstrapoperator.model.SidecarInjectionConfig;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;

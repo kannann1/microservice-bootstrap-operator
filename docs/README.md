@@ -20,6 +20,6 @@ This documentation is organized into the following sections:
 
 ## Quick Links
 
-- [GitHub Repository](https://github.com/k8soperators/microservice-bootstrap-operator)
-- [Issue Tracker](https://github.com/k8soperators/microservice-bootstrap-operator/issues)
+- [GitHub Repository](https://github.com/kannann1/microservice-bootstrap-operator)
+- [Issue Tracker](https://github.com/kannann1/microservice-bootstrap-operator/issues)
 - [Release Notes](./CHANGELOG.md)

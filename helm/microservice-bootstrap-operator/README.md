@@ -20,14 +20,14 @@ This Helm chart deploys the Microservice Bootstrap Operator, which automates the
 Add the K8s Operators Helm repository:
 
 ```bash
-helm repo add k8soperators https://k8soperators.github.io/charts
+helm repo add kannann1 https://kannann1.github.io/charts
 helm repo update
 ```
 
 Install the chart with the release name `microservice-bootstrap-operator`:
 
 ```bash
-helm install microservice-bootstrap-operator k8soperators/microservice-bootstrap-operator
+helm install microservice-bootstrap-operator kannann1/microservice-bootstrap-operator
 ```
 
 The command deploys the Microservice Bootstrap Operator on the Kubernetes cluster with default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -56,7 +56,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 | Name                | Description                                        | Value                                    |
 | ------------------- | -------------------------------------------------- | ---------------------------------------- |
-| `image.repository`  | Operator image repository                          | `k8soperators/microservice-bootstrap-operator` |
+| `image.repository`  | Operator image repository                          | `kannann1/microservice-bootstrap-operator` |
 | `image.tag`         | Operator image tag (defaults to Chart appVersion)  | `""`                                     |
 | `image.pullPolicy`  | Operator image pull policy                         | `IfNotPresent`                           |
 | `imagePullSecrets`  | Specify image pull secrets                         | `[]`                                     |
@@ -158,4 +158,4 @@ spec:
     enabled: true
 ```
 
-For more information on using the operator, see the [documentation](https://github.com/k8soperators/microservice-bootstrap-operator/tree/main/docs).
+For more information on using the operator, see the [documentation](https://github.com/kannann1/microservice-bootstrap-operator/tree/main/docs).

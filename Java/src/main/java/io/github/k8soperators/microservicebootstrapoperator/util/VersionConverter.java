@@ -1,7 +1,7 @@
-package io.github.k8soperators.microservicebootstrapoperator.util;
+package io.github.kannann1.microservicebootstrapoperator.util;
 
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
-import io.github.k8soperators.microservicebootstrapoperator.model.NetworkPolicyConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.NetworkPolicyConfig;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.extern.slf4j.Slf4j;
 

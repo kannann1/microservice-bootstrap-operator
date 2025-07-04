@@ -1,4 +1,4 @@
-package io.github.k8soperators.microservicebootstrapoperator.service;
+package io.github.kannann1.microservicebootstrapoperator.service;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -7,10 +7,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfigSpec;
-import io.github.k8soperators.microservicebootstrapoperator.model.SecretRotationConfig;
-import io.github.k8soperators.microservicebootstrapoperator.util.RetryUtil;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfigSpec;
+import io.github.kannann1.microservicebootstrapoperator.model.SecretRotationConfig;
+import io.github.kannann1.microservicebootstrapoperator.util.RetryUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -39,8 +39,8 @@ jobs:
         run: |
           cat > mkdocs.yml << EOF
           site_name: Microservice Bootstrap Operator
-          site_url: https://k8soperators.github.io/microservice-bootstrap-operator
-          repo_url: https://github.com/k8soperators/microservice-bootstrap-operator
+          site_url: https://kannann1.github.io/microservice-bootstrap-operator
+          repo_url: https://github.com/kannann1/microservice-bootstrap-operator
           theme:
             name: material
             palette:

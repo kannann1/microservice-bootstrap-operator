@@ -1,13 +1,13 @@
-package io.github.k8soperators.microservicebootstrapoperator.controller;
+package io.github.kannann1.microservicebootstrapoperator.controller;
 
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfigSpec;
-import io.github.k8soperators.microservicebootstrapoperator.model.SidecarInjectionConfig;
-import io.github.k8soperators.microservicebootstrapoperator.service.ConfigMapService;
-import io.github.k8soperators.microservicebootstrapoperator.service.NetworkPolicyService;
-import io.github.k8soperators.microservicebootstrapoperator.service.RBACService;
-import io.github.k8soperators.microservicebootstrapoperator.service.SecretRotationService;
-import io.github.k8soperators.microservicebootstrapoperator.service.SidecarInjectionService;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfigSpec;
+import io.github.kannann1.microservicebootstrapoperator.model.SidecarInjectionConfig;
+import io.github.kannann1.microservicebootstrapoperator.service.ConfigMapService;
+import io.github.kannann1.microservicebootstrapoperator.service.NetworkPolicyService;
+import io.github.kannann1.microservicebootstrapoperator.service.RBACService;
+import io.github.kannann1.microservicebootstrapoperator.service.SecretRotationService;
+import io.github.kannann1.microservicebootstrapoperator.service.SidecarInjectionService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;

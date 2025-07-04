@@ -15,21 +15,21 @@ This guide will help you install and start using the Microservice Bootstrap Oper
 1. Apply the CRD:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/k8soperators/microservice-bootstrap-operator/main/k8s/crd/microservice.github.io_appconfigs.yaml
+kubectl apply -f https://raw.githubusercontent.com/kannann1/microservice-bootstrap-operator/main/k8s/crd/microservice.github.io_appconfigs.yaml
 ```
 
 2. Deploy the operator:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/k8soperators/microservice-bootstrap-operator/main/k8s/deploy/operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/kannann1/microservice-bootstrap-operator/main/k8s/deploy/operator.yaml
 ```
 
 ### Using Helm
 
 ```bash
-helm repo add k8soperators https://k8soperators.github.io/charts
+helm repo add kannann1 https://kannann1.github.io/charts
 helm repo update
-helm install microservice-bootstrap-operator k8soperators/microservice-bootstrap-operator
+helm install microservice-bootstrap-operator kannann1/microservice-bootstrap-operator
 ```
 
 ## Verify Installation

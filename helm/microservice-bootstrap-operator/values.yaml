@@ -4,7 +4,7 @@
 replicaCount: 1
 
 image:
-  repository: k8soperators/microservice-bootstrap-operator
+  repository: kannann1/microservice-bootstrap-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion
   tag: ""

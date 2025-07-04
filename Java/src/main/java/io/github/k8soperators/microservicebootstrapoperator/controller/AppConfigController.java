@@ -1,13 +1,13 @@
-package io.github.k8soperators.microservicebootstrapoperator.controller;
+package io.github.kannann1.microservicebootstrapoperator.controller;
 
-import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
-import io.github.k8soperators.microservicebootstrapoperator.service.ConfigMapService;
-import io.github.k8soperators.microservicebootstrapoperator.service.NetworkPolicyService;
-import io.github.k8soperators.microservicebootstrapoperator.service.RBACService;
-import io.github.k8soperators.microservicebootstrapoperator.service.SecretRotationService;
-import io.github.k8soperators.microservicebootstrapoperator.service.SidecarInjectionService;
-import io.github.k8soperators.microservicebootstrapoperator.util.RetryUtil;
-import io.github.k8soperators.microservicebootstrapoperator.util.VersionConverter;
+import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.kannann1.microservicebootstrapoperator.service.ConfigMapService;
+import io.github.kannann1.microservicebootstrapoperator.service.NetworkPolicyService;
+import io.github.kannann1.microservicebootstrapoperator.service.RBACService;
+import io.github.kannann1.microservicebootstrapoperator.service.SecretRotationService;
+import io.github.kannann1.microservicebootstrapoperator.service.SidecarInjectionService;
+import io.github.kannann1.microservicebootstrapoperator.util.RetryUtil;
+import io.github.kannann1.microservicebootstrapoperator.util.VersionConverter;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;

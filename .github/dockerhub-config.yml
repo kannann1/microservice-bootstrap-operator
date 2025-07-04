@@ -2,7 +2,7 @@
 
 # Repository Configuration
 repository:
-  name: k8soperators/microservice-bootstrap-operator
+  name: kannann1/microservice-bootstrap-operator
   description: A Kubernetes operator for automating microservice bootstrapping and secret rotation
   full_description: |
     # Microservice Bootstrap Operator
@@ -19,7 +19,7 @@ repository:
     
     ## Usage
     
-    See the [GitHub repository](https://github.com/k8soperators/microservice-bootstrap-operator) for full documentation.
+    See the [GitHub repository](https://github.com/kannann1/microservice-bootstrap-operator) for full documentation.
   
   # Tags for the Docker image
   tags:
@@ -43,8 +43,8 @@ build:
   
   # Labels for the Docker image
   labels:
-    maintainer: "K8s Operators Team <maintainers@k8soperators.github.io>"
-    org.opencontainers.image.source: "https://github.com/k8soperators/microservice-bootstrap-operator"
+    maintainer: "K8s Operators Team <maintainers@kannann1.github.io>"
+    org.opencontainers.image.source: "https://github.com/kannann1/microservice-bootstrap-operator"
     org.opencontainers.image.description: "Kubernetes operator for microservice bootstrapping"
     org.opencontainers.image.licenses: "Apache-2.0"
 

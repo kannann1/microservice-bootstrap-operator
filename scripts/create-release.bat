@@ -151,13 +151,13 @@ REM Build and push Docker image if requested
 if "%PUSH_IMAGES%"=="true" (
     echo Building Docker image...
     cd ..\Java
-    docker build -t k8soperators/microservice-bootstrap-operator:%VERSION% .
-    docker tag k8soperators/microservice-bootstrap-operator:%VERSION% k8soperators/microservice-bootstrap-operator:latest
+    docker build -t kannann1/microservice-bootstrap-operator:%VERSION% .
+    docker tag kannann1/microservice-bootstrap-operator:%VERSION% kannann1/microservice-bootstrap-operator:latest
     
     if "%DRY_RUN%"=="false" (
         echo Pushing Docker image...
-        docker push k8soperators/microservice-bootstrap-operator:%VERSION%
-        docker push k8soperators/microservice-bootstrap-operator:latest
+        docker push kannann1/microservice-bootstrap-operator:%VERSION%
+        docker push kannann1/microservice-bootstrap-operator:latest
     )
     cd ..\scripts
 )

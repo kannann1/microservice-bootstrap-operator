@@ -1,4 +1,4 @@
-package io.github.k8soperators.microservicebootstrapoperator.model;
+package io.github.kannann1.microservicebootstrapoperator.model;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;

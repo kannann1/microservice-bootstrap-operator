@@ -9,9 +9,9 @@ keywords:
   - operator
   - microservice
   - bootstrap
-home: https://github.com/k8soperators/microservice-bootstrap-operator
+home: https://github.com/kannann1/microservice-bootstrap-operator
 sources:
-  - https://github.com/k8soperators/microservice-bootstrap-operator
+  - https://github.com/kannann1/microservice-bootstrap-operator
 maintainers:
   - name: K8s Operators Team
-    email: maintainers@k8soperators.github.io
+    email: maintainers@kannann1.github.io

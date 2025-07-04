@@ -1,4 +1,4 @@
-package io.github.k8soperators.microservicebootstrapoperator.config;
+package io.github.kannann1.microservicebootstrapoperator.config;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;

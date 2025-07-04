@@ -1,4 +1,4 @@
-package io.github.k8soperators.microservicebootstrapoperator.model;
+package io.github.kannann1.microservicebootstrapoperator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.Condition;

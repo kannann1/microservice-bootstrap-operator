@@ -1,4 +1,4 @@
-package io.github.kannann1.microservicebootstrapoperator.util;
+package io.github.k8soperators.microservicebootstrapoperator.util;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,6 +1,6 @@
-package io.github.kannann1.microservicebootstrapoperator;
+package io.github.k8soperators.microservicebootstrapoperator;
 
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.Operator;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;

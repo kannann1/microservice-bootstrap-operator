@@ -1,8 +1,8 @@
-package io.github.kannann1.microservicebootstrapoperator.service;
+package io.github.k8soperators.microservicebootstrapoperator.service;
 
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfigSpec;
-import io.github.kannann1.microservicebootstrapoperator.model.SidecarInjectionConfig;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfigSpec;
+import io.github.k8soperators.microservicebootstrapoperator.model.SidecarInjectionConfig;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-// Removed unused import: static org.mockito.ArgumentMatchers.any
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +55,15 @@ public class SidecarInjectionServiceTest {
         when(kubernetesClient.pods()).thenReturn(podOperation);
         when(podOperation.inAnyNamespace()).thenReturn(nonNamespaceOperation);
         when(nonNamespaceOperation.inform()).thenReturn(podInformer);
+        
+        // Fix for NullPointerException
+        when(podOperation.inNamespace(anyString())).thenReturn(nonNamespaceOperation);
+        when(nonNamespaceOperation.withName(anyString())).thenReturn(podResource);
+        when(nonNamespaceOperation.resource(any(Pod.class))).thenReturn(podResource);
+        
+        // Make all stubs lenient to avoid unnecessary stubbing exceptions
+        lenient().when(podResource.get()).thenReturn(null);
+        lenient().when(podResource.serverSideApply()).thenReturn(null);
         
         sidecarInjectionService = new SidecarInjectionService(kubernetesClient);
     }
@@ -127,13 +136,12 @@ public class SidecarInjectionServiceTest {
         // Create test pod
         Pod pod = createTestPod("test-pod", "test-namespace", Map.of("app", "test-app"));
         
-        // Mock pod resource
-        when(kubernetesClient.pods().inNamespace("test-namespace").withName("test-pod")).thenReturn(podResource);
+        // Setup the mocks for the specific test
         when(podResource.get()).thenReturn(pod);
         
         // Capture the pod that is passed to serverSideApply
         ArgumentCaptor<Pod> podCaptor = ArgumentCaptor.forClass(Pod.class);
-        when(kubernetesClient.pods().inNamespace(eq("test-namespace")).resource(podCaptor.capture())).thenReturn(podResource);
+        doReturn(podResource).when(nonNamespaceOperation).resource(podCaptor.capture());
         
         // Inject sidecar
         sidecarInjectionService.injectSidecar(pod, appConfig);

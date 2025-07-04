@@ -1,4 +1,4 @@
-package io.github.kannann1.microservicebootstrapoperator.service;
+package io.github.k8soperators.microservicebootstrapoperator.service;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -7,10 +7,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfigSpec;
-import io.github.kannann1.microservicebootstrapoperator.model.SecretRotationConfig;
-import io.github.kannann1.microservicebootstrapoperator.util.RetryUtil;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfigSpec;
+import io.github.k8soperators.microservicebootstrapoperator.model.SecretRotationConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,11 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -54,39 +50,34 @@ public class SecretRotationServiceTest {
         when(kubernetesClient.secrets()).thenReturn(secretClient);
         when(secretClient.inNamespace(anyString())).thenReturn(namespaceSecretClient);
         when(namespaceSecretClient.withName(anyString())).thenReturn(secretResource);
+        
+        // Mock the resource() method to fix the NullPointerException
+        when(namespaceSecretClient.resource(any(Secret.class))).thenReturn(secretResource);
+        
+        // Make all stubs lenient to avoid unnecessary stubbing exceptions
+        lenient().when(secretResource.get()).thenReturn(null);
+        lenient().when(secretResource.create()).thenReturn(null);
+        lenient().when(secretResource.replace()).thenReturn(null);
     }
 
     @Test
     void testRotateSecretsWithDefaultStrategy() {
         // Setup
         AppConfig appConfig = createAppConfig("default", null);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("test-secret");
-        
-        // Mock existing secret
-        Secret existingSecret = new SecretBuilder()
-                .withNewMetadata()
-                .withName("test-secret")
-                .withNamespace(namespace)
-                .endMetadata()
-                .withData(new HashMap<>())
-                .build();
-        
-        when(secretResource.get()).thenReturn(existingSecret);
-        when(secretResource.createOrReplace(any(Secret.class))).thenReturn(existingSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
-        // Verify
+        // Verify - since secretResource.get() returns null by default, create() should be called
         ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
-        verify(secretResource).createOrReplace(secretCaptor.capture());
+        verify(secretResource).create();
+        verify(namespaceSecretClient).resource(secretCaptor.capture());
         
         Secret capturedSecret = secretCaptor.getValue();
-        assertNotNull(capturedSecret.getData());
-        assertTrue(capturedSecret.getData().containsKey("password"));
-        assertTrue(capturedSecret.getData().containsKey("rotationTimestamp"));
-        assertTrue(capturedSecret.getData().containsKey("rotationId"));
+        assertNotNull(capturedSecret.getStringData());
+        assertTrue(capturedSecret.getStringData().containsKey("password"));
+        assertTrue(capturedSecret.getStringData().containsKey("rotationTimestamp"));
+        assertTrue(capturedSecret.getStringData().containsKey("rotationId"));
         
         // Verify metadata
         assertNotNull(capturedSecret.getMetadata().getAnnotations());
@@ -101,14 +92,12 @@ public class SecretRotationServiceTest {
         Map<String, String> strategyConfig = new HashMap<>();
         strategyConfig.put("dbType", "postgresql");
         AppConfig appConfig = createAppConfig("database", strategyConfig);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("db-secret");
         
         // Mock existing secret
         Secret existingSecret = new SecretBuilder()
                 .withNewMetadata()
                 .withName("db-secret")
-                .withNamespace(namespace)
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withData(new HashMap<>())
                 .build();
@@ -117,7 +106,7 @@ public class SecretRotationServiceTest {
         when(secretResource.createOrReplace(any(Secret.class))).thenReturn(existingSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
         // Verify
         ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
@@ -143,14 +132,12 @@ public class SecretRotationServiceTest {
         Map<String, String> strategyConfig = new HashMap<>();
         strategyConfig.put("keyLength", "32");
         AppConfig appConfig = createAppConfig("api-key", strategyConfig);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("api-secret");
         
         // Mock existing secret
         Secret existingSecret = new SecretBuilder()
                 .withNewMetadata()
                 .withName("api-secret")
-                .withNamespace(namespace)
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withData(new HashMap<>())
                 .build();
@@ -159,7 +146,7 @@ public class SecretRotationServiceTest {
         when(secretResource.createOrReplace(any(Secret.class))).thenReturn(existingSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
         // Verify
         ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
@@ -185,14 +172,12 @@ public class SecretRotationServiceTest {
         Map<String, String> strategyConfig = new HashMap<>();
         strategyConfig.put("commonName", "example.com");
         AppConfig appConfig = createAppConfig("tls", strategyConfig);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("tls-secret");
         
         // Mock existing secret
         Secret existingSecret = new SecretBuilder()
                 .withNewMetadata()
                 .withName("tls-secret")
-                .withNamespace(namespace)
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withData(new HashMap<>())
                 .build();
@@ -201,7 +186,7 @@ public class SecretRotationServiceTest {
         when(secretResource.createOrReplace(any(Secret.class))).thenReturn(existingSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
         // Verify
         ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
@@ -225,8 +210,6 @@ public class SecretRotationServiceTest {
     void testRotateSecretsWithNonExistentSecret() {
         // Setup
         AppConfig appConfig = createAppConfig("default", null);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("non-existent-secret");
         
         // Mock non-existent secret
         when(secretResource.get()).thenReturn(null);
@@ -235,14 +218,14 @@ public class SecretRotationServiceTest {
         Secret newSecret = new SecretBuilder()
                 .withNewMetadata()
                 .withName("non-existent-secret")
-                .withNamespace(namespace)
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withData(new HashMap<>())
                 .build();
         when(secretResource.createOrReplace(any(Secret.class))).thenReturn(newSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
         // Verify
         ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
@@ -259,14 +242,12 @@ public class SecretRotationServiceTest {
     void testRotateSecretsWithRetryOnFailure() {
         // Setup
         AppConfig appConfig = createAppConfig("default", null);
-        String namespace = "test-namespace";
-        List<String> secretSources = Arrays.asList("test-secret");
         
         // Mock existing secret
         Secret existingSecret = new SecretBuilder()
                 .withNewMetadata()
                 .withName("test-secret")
-                .withNamespace(namespace)
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withData(new HashMap<>())
                 .build();
@@ -279,7 +260,7 @@ public class SecretRotationServiceTest {
                 .thenReturn(existingSecret);
         
         // Execute
-        secretRotationService.rotateSecrets(appConfig, namespace, secretSources);
+        secretRotationService.rotateSecrets(appConfig);
         
         // Verify
         verify(secretResource, times(2)).createOrReplace(any(Secret.class));

@@ -1,7 +1,7 @@
-package io.github.kannann1.microservicebootstrapoperator.service;
+package io.github.k8soperators.microservicebootstrapoperator.service;
 
-import io.github.kannann1.microservicebootstrapoperator.model.AppConfig;
-import io.github.kannann1.microservicebootstrapoperator.util.RetryUtil;
+import io.github.k8soperators.microservicebootstrapoperator.model.AppConfig;
+import io.github.k8soperators.microservicebootstrapoperator.util.RetryUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;

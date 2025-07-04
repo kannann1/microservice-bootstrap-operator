@@ -1,4 +1,4 @@
-package io.github.kannann1.microservicebootstrapoperator.model;
+package io.github.k8soperators.microservicebootstrapoperator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

@@ -71,7 +71,8 @@ jobs:
       - name: SonarQube Scan
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN || '' }}
         run: |
           cd Java
           mvn -B sonar:sonar \
@@ -322,14 +323,14 @@ jobs:
           kubectl get appconfigs -n $NAMESPACE
           
       - name: Send Slack notification
-        if: success() && secrets.SLACK_WEBHOOK != ''
+        if: success() && vars.ENABLE_SLACK_NOTIFICATIONS == 'true'
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: 'Deployment to ${{ github.event.inputs.environment || "prod" }} successful'
-          SLACK_MESSAGE: 'Successfully deployed version ${{ env.VERSION }} to ${{ github.event.inputs.environment || "prod" }} environment'
+          SLACK_TITLE: 'Deployment to ${{ github.event.inputs.environment || ''prod'' }} successful'
+          SLACK_MESSAGE: 'Successfully deployed version ${{ env.VERSION }} to ${{ github.event.inputs.environment || ''prod'' }} environment'
           
   release:
     name: Create GitHub Release

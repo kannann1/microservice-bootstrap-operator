@@ -93,7 +93,7 @@ jobs:
           retention-days: 7
           
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-jar
           path: Java/target/*.jar
@@ -101,7 +101,7 @@ jobs:
           
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: Java/target/surefire-reports
@@ -227,7 +227,7 @@ jobs:
           helm package helm/${{ env.HELM_CHART_NAME }} --destination .cr-release-packages
           
       - name: Upload Helm chart artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: helm-chart
           path: .cr-release-packages/*.tgz

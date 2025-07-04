@@ -1,3 +1,22 @@
+# CI/CD Pipeline Overview
+
+## Documentation Publishing
+
+The CI/CD pipeline begins with the documentation publishing workflow, which ensures that all documentation is up-to-date before any build or deployment processes run.
+
+### Workflow: docs-publish.yml
+
+- **Trigger**: Runs on any push to the main branch or manual trigger
+- **Process**:
+  1. Collects all Markdown files from the repository
+  2. Builds a documentation site using MkDocs with Material theme
+  3. Deploys the documentation to GitHub Pages
+- **Dependencies**: Requires GitHub Pages to be enabled in repository settings (see SETUP.md)
+
+### Integration with CI/CD Pipeline
+
+The main CI/CD pipeline is configured to run only after the documentation publishing workflow completes successfully. This ensures that documentation is always published before any new builds or releases.
+
 # CI/CD Pipeline for Microservice Bootstrap Operator
 
 This document describes the CI/CD pipeline setup for the Microservice Bootstrap Operator project.

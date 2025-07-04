@@ -1,5 +1,16 @@
 # Microservice Bootstrap Operator CI/CD Setup Guide
 
+## GitHub Pages Setup
+
+To enable documentation publishing as GitHub Pages, follow these steps:
+
+1. Go to your GitHub repository settings
+2. Navigate to the "Pages" section in the left sidebar
+3. Under "Source", select "GitHub Actions" from the dropdown menu
+4. Click "Save"
+
+Once configured, the documentation publishing workflow will automatically build and deploy your documentation to GitHub Pages whenever changes are pushed to the main branch.
+
 This guide provides step-by-step instructions for setting up the CI/CD pipeline for the Microservice Bootstrap Operator project.
 
 ## Prerequisites

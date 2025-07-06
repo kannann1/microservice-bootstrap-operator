@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
-// Removed unused import: io.fabric8.kubernetes.client.dsl.Resource
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +29,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for SidecarInjectionService
+ * Updated for Java 22 compatibility
+ */
 @ExtendWith(MockitoExtension.class)
 public class SidecarInjectionServiceTest {
 
@@ -52,14 +55,15 @@ public class SidecarInjectionServiceTest {
     
     @BeforeEach
     public void setup() {
-        when(kubernetesClient.pods()).thenReturn(podOperation);
-        when(podOperation.inAnyNamespace()).thenReturn(nonNamespaceOperation);
-        when(nonNamespaceOperation.inform()).thenReturn(podInformer);
+        // Setup basic mocks that are needed for all tests
+        lenient().when(kubernetesClient.pods()).thenReturn(podOperation);
+        lenient().when(podOperation.inAnyNamespace()).thenReturn(nonNamespaceOperation);
+        lenient().when(nonNamespaceOperation.inform()).thenReturn(podInformer);
         
         // Fix for NullPointerException
-        when(podOperation.inNamespace(anyString())).thenReturn(nonNamespaceOperation);
-        when(nonNamespaceOperation.withName(anyString())).thenReturn(podResource);
-        when(nonNamespaceOperation.resource(any(Pod.class))).thenReturn(podResource);
+        lenient().when(podOperation.inNamespace(anyString())).thenReturn(nonNamespaceOperation);
+        lenient().when(nonNamespaceOperation.withName(anyString())).thenReturn(podResource);
+        lenient().when(nonNamespaceOperation.resource(any(Pod.class))).thenReturn(podResource);
         
         // Make all stubs lenient to avoid unnecessary stubbing exceptions
         lenient().when(podResource.get()).thenReturn(null);
@@ -79,11 +83,15 @@ public class SidecarInjectionServiceTest {
         // Verify it's registered by checking if handlePodCreation works with it
         Pod pod = createTestPod("test-pod", "test-namespace", Map.of("app", "test-app"));
         
-        when(kubernetesClient.pods().inNamespace("test-namespace").withName("test-pod")).thenReturn(podResource);
-        when(podResource.get()).thenReturn(pod);
+        // Setup specific mocks for this test case - use lenient() to avoid unnecessary stubbing errors
+        lenient().when(kubernetesClient.pods().inNamespace("test-namespace").withName("test-pod")).thenReturn(podResource);
+        lenient().when(podResource.get()).thenReturn(pod);
         
         // Simulate pod creation event
         sidecarInjectionService.handlePodCreation(pod);
+        
+        // Verify expected interactions occurred
+        verify(podResource).serverSideApply();
         
         // Unregister AppConfig
         sidecarInjectionService.unregisterAppConfig(appConfig);
@@ -91,11 +99,14 @@ public class SidecarInjectionServiceTest {
         // Create a new pod and verify it's not injected
         Pod newPod = createTestPod("test-pod-2", "test-namespace", Map.of("app", "test-app"));
         
+        // Reset the mock to clear previous interactions
+        reset(podResource);
+        
         // Simulate pod creation event after unregistering
         sidecarInjectionService.handlePodCreation(newPod);
         
-        // Verify no more interactions with the pod resource
-        verifyNoMoreInteractions(podResource);
+        // Verify no interactions with the pod resource after reset
+        verifyNoInteractions(podResource);
     }
     
     @Test
@@ -103,16 +114,9 @@ public class SidecarInjectionServiceTest {
         // Create test AppConfig
         AppConfig appConfig = createTestAppConfig("test-app", "test-namespace");
         
-        // Register AppConfig
-        sidecarInjectionService.registerAppConfig(appConfig);
-        
-        // Create test pod with matching labels
+        // Create test pods with different scenarios
         Pod matchingPod = createTestPod("matching-pod", "test-namespace", Map.of("app", "test-app"));
-        
-        // Create test pod with non-matching labels
         Pod nonMatchingPod = createTestPod("non-matching-pod", "test-namespace", Map.of("app", "other-app"));
-        
-        // Create test pod with matching labels but in different namespace
         Pod differentNamespacePod = createTestPod("different-namespace-pod", "other-namespace", Map.of("app", "test-app"));
         
         // Create test pod with matching labels but already has sidecar
@@ -121,11 +125,15 @@ public class SidecarInjectionServiceTest {
         sidecarContainer.setName("test-app-sidecar");
         podWithSidecar.getSpec().getContainers().add(sidecarContainer);
         
-        // Test shouldInjectSidecar method
-        assertTrue(sidecarInjectionService.shouldInjectSidecar(matchingPod, appConfig));
-        assertFalse(sidecarInjectionService.shouldInjectSidecar(nonMatchingPod, appConfig));
-        assertFalse(sidecarInjectionService.shouldInjectSidecar(differentNamespacePod, appConfig));
-        assertFalse(sidecarInjectionService.shouldInjectSidecar(podWithSidecar, appConfig));
+        // Test shouldInjectSidecar method directly without registering the AppConfig
+        assertTrue(sidecarInjectionService.shouldInjectSidecar(matchingPod, appConfig), 
+                "Should inject sidecar for pod with matching labels in the same namespace");
+        assertFalse(sidecarInjectionService.shouldInjectSidecar(nonMatchingPod, appConfig),
+                "Should not inject sidecar for pod with non-matching labels");
+        assertFalse(sidecarInjectionService.shouldInjectSidecar(differentNamespacePod, appConfig),
+                "Should not inject sidecar for pod in different namespace");
+        assertFalse(sidecarInjectionService.shouldInjectSidecar(podWithSidecar, appConfig),
+                "Should not inject sidecar for pod that already has the sidecar");
     }
     
     @Test
@@ -136,12 +144,9 @@ public class SidecarInjectionServiceTest {
         // Create test pod
         Pod pod = createTestPod("test-pod", "test-namespace", Map.of("app", "test-app"));
         
-        // Setup the mocks for the specific test
-        when(podResource.get()).thenReturn(pod);
-        
-        // Capture the pod that is passed to serverSideApply
+        // Capture the pod that is passed to resource() method
         ArgumentCaptor<Pod> podCaptor = ArgumentCaptor.forClass(Pod.class);
-        doReturn(podResource).when(nonNamespaceOperation).resource(podCaptor.capture());
+        when(nonNamespaceOperation.resource(podCaptor.capture())).thenReturn(podResource);
         
         // Inject sidecar
         sidecarInjectionService.injectSidecar(pod, appConfig);
@@ -153,23 +158,26 @@ public class SidecarInjectionServiceTest {
         Pod updatedPod = podCaptor.getValue();
         List<Container> containers = updatedPod.getSpec().getContainers();
         
-        assertEquals(2, containers.size());
-        assertEquals("test-app-sidecar", containers.get(1).getName());
-        assertEquals("nginx:latest", containers.get(1).getImage());
+        assertEquals(2, containers.size(), "Pod should have 2 containers after injection");
+        assertEquals("test-app-sidecar", containers.get(1).getName(), "Second container should be the sidecar");
+        assertEquals("nginx:latest", containers.get(1).getImage(), "Sidecar should have the correct image");
         
         // Verify environment variables
-        assertEquals(2, containers.get(1).getEnv().size());
-        assertEquals("APP_NAME", containers.get(1).getEnv().get(0).getName());
-        assertEquals("test-app", containers.get(1).getEnv().get(0).getValue());
-        assertEquals("DEBUG", containers.get(1).getEnv().get(1).getName());
-        assertEquals("true", containers.get(1).getEnv().get(1).getValue());
+        assertEquals(2, containers.get(1).getEnv().size(), "Sidecar should have 2 environment variables");
+        assertEquals("APP_NAME", containers.get(1).getEnv().get(0).getName(), "First env var should be APP_NAME");
+        assertEquals("test-app", containers.get(1).getEnv().get(0).getValue(), "APP_NAME should have correct value");
+        assertEquals("DEBUG", containers.get(1).getEnv().get(1).getName(), "Second env var should be DEBUG");
+        assertEquals("true", containers.get(1).getEnv().get(1).getValue(), "DEBUG should have correct value");
         
         // Verify volume mounts
-        assertEquals(1, containers.get(1).getVolumeMounts().size());
-        assertEquals("config-volume", containers.get(1).getVolumeMounts().get(0).getName());
-        assertEquals("/etc/config", containers.get(1).getVolumeMounts().get(0).getMountPath());
+        assertEquals(1, containers.get(1).getVolumeMounts().size(), "Sidecar should have 1 volume mount");
+        assertEquals("config-volume", containers.get(1).getVolumeMounts().get(0).getName(), "Volume mount should have correct name");
+        assertEquals("/etc/config", containers.get(1).getVolumeMounts().get(0).getMountPath(), "Volume mount should have correct path");
     }
     
+    /**
+     * Helper method to create a test AppConfig
+     */
     private AppConfig createTestAppConfig(String name, String namespace) {
         AppConfig appConfig = new AppConfig();
         
@@ -185,18 +193,10 @@ public class SidecarInjectionServiceTest {
         sidecarInjection.setEnabled(true);
         sidecarInjection.setImage("nginx:latest");
         
-        Map<String, String> selectorLabels = new HashMap<>();
-        selectorLabels.put("app", name);
-        sidecarInjection.setSelectorLabels(selectorLabels);
-        
-        Map<String, String> env = new HashMap<>();
-        env.put("APP_NAME", name);
-        env.put("DEBUG", "true");
-        sidecarInjection.setEnv(env);
-        
-        Map<String, String> volumeMounts = new HashMap<>();
-        volumeMounts.put("config-volume", "/etc/config");
-        sidecarInjection.setVolumeMounts(volumeMounts);
+        // Use Map.of for immutable maps in Java 22
+        sidecarInjection.setSelectorLabels(new HashMap<>(Map.of("app", name)));
+        sidecarInjection.setEnv(new HashMap<>(Map.of("APP_NAME", name, "DEBUG", "true")));
+        sidecarInjection.setVolumeMounts(new HashMap<>(Map.of("config-volume", "/etc/config")));
         
         spec.setSidecarInjection(sidecarInjection);
         appConfig.setSpec(spec);
@@ -204,6 +204,9 @@ public class SidecarInjectionServiceTest {
         return appConfig;
     }
     
+    /**
+     * Helper method to create a test Pod
+     */
     private Pod createTestPod(String name, String namespace, Map<String, String> labels) {
         Pod pod = new Pod();
         

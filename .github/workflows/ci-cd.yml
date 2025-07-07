@@ -179,8 +179,8 @@ jobs:
           
       - name: Verify image signature
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(echo ${{ steps.meta.outputs.tags }} | cut -d':' -f2 | head -n1)
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(echo ${{ steps.meta.outputs.tags }} | cut -d':' -f2 | head -n1)
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
   helm-package:
     name: Package and Push Helm Chart

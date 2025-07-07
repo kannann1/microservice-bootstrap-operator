@@ -2,7 +2,7 @@
 
 # Repository Configuration
 repository:
-  name: kannann1/microservice-bootstrap-operator
+  name: kannan91/microservice-bootstrap-operator
   description: A Kubernetes operator for automating microservice bootstrapping and secret rotation
   full_description: |
     # Microservice Bootstrap Operator

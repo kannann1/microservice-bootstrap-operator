@@ -56,7 +56,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 | Name                | Description                                        | Value                                    |
 | ------------------- | -------------------------------------------------- | ---------------------------------------- |
-| `image.repository`  | Operator image repository                          | `kannann1/microservice-bootstrap-operator` |
+| `image.repository`  | Operator image repository                          | `kannan91/microservice-bootstrap-operator` |
 | `image.tag`         | Operator image tag (defaults to Chart appVersion)  | `""`                                     |
 | `image.pullPolicy`  | Operator image pull policy                         | `IfNotPresent`                           |
 | `imagePullSecrets`  | Specify image pull secrets                         | `[]`                                     |

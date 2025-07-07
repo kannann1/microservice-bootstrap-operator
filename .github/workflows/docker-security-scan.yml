@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: kannann1/microservice-bootstrap-operator
+  IMAGE_NAME: kannan91/microservice-bootstrap-operator
 
 jobs:
   scan:
@@ -38,7 +38,7 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
           

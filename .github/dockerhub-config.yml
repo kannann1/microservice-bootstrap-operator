@@ -43,7 +43,7 @@ build:
   
   # Labels for the Docker image
   labels:
-    maintainer: "K8s Operators Team <maintainers@kannann1.github.io>"
+    maintainer: "Kannan <kannan@kannann1.github.io>"
     org.opencontainers.image.source: "https://github.com/kannann1/microservice-bootstrap-operator"
     org.opencontainers.image.description: "Kubernetes operator for microservice bootstrapping"
     org.opencontainers.image.licenses: "Apache-2.0"

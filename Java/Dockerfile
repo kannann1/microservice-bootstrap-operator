@@ -3,17 +3,15 @@ WORKDIR /app
 
 # Copy the POM file first to leverage Docker cache
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline
+RUN mvn dependency:go-offline
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN ./mvnw package -DskipTests
+RUN mvn package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
